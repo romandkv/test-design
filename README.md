@@ -1,10 +1,12 @@
 # test-design
 
 ## 1) Возможно ли такое в PHP и как это реализуется, если возможно:
+```php
 $obj = new Building();
 $obj['name'] = 'Main tower';
 $obj['flats'] = 100;
 $obj->save();
+```
 
 Возможно, если реализовать интерфейс **ArrayAccess**:
 ```php
