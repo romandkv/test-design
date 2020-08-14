@@ -29,5 +29,9 @@ class Building implements ArrayAccess {
     public function offsetUnset($offset) {
         unset($this->$offset);
     }
+    
+    public function save() {
+        /**/
+    }
 }
 ```
