@@ -231,7 +231,7 @@ echo $calc1->calculate($val1, $val2) * ($calc2->calculate($val1, $val2) + $calc3
 ```
 Memory usage is: 28
 Memory usage is: 0
-Speed = INF
+Speed = INF *Код выполняет свою задачу*
 ```
 ```php
 function readTheFile(&$memoryUsage) {
