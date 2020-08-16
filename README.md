@@ -111,3 +111,160 @@ class Applicant extends Specialist {
 
 }
 ```
+## 4) Ниже приведён пример плохого кода. Представьте, что вы вернулись в 2010 год и решили отрефакторить его с учетом текущей ветки языка. Опишите проблемы этого кода и приведите пример хорошей реализации:
+```php
+<?php
+// получить дату вставки новостей
+$insert = $_REQUEST['insert'];
+$insertTs = strtotime($insert);
+
+
+$sql = "SELECT * FROM news WHERE insert = '" . $insert . "'";
+$res = mysql_query($sql);
+while ($item = mysql_fetch_assoc($res)) {
+// перебираем новости и для каждой новости отображаем ее анонс
+echo 'News ' . $item['title'] . ': ' . "\n";
+$sql = 'SELECT * FROM announce WHERE item_id = ' . $item['id'];
+$res2 = mysql_query($sql);
+while ($item = mysql_fetch_assoc($res2)) {
+echo $announce['text'] . "\n";
+if ($item['is_new']) {
+$mainItem = $item;
+}
+}
+echo 'Main news item: ' . $mainItem['id'] . "\n";
+}
+
+
+echo date('Y-m-d H:i:s', $insertTs);
+
+```
+https://qna.habr.com/q/263613 - чем плох $_REQUEST
+Все данные следует приводить к их типам и экранировать строки во избежание попадания ковычек 
+и прочих символов, которые являются ключевыми при построении запроса, при вставке в строковый запрос
+При выводе данных на страницу, следует применять htmlspecialchars(), чтобы избежать попадания в html код
+html сущностей, выводиться должен только контент
+```php
+<?php
+// получить дату вставки новостей
+//$insert = $_REQUEST['insert'];
+$insert = $_POST['insert'];
+$insertTs = strtotime($insert);
+
+if ($insert !== -1) {
+	$sql = "SELECT * FROM news WHERE insert = '" . mysql_real_escape_string($insert) . "'";
+	$res = mysql_query($sql);
+	while ($item = mysql_fetch_assoc($res)) {
+		// перебираем новости и для каждой новости отображаем ее анонс
+		echo 'News ' . htmlspecialchars($item['title']) . ': ' . "\n";
+		$item['id'] = intval($item['id']);
+		if ($item['id'] !== 0) {
+			$sql = 'SELECT * FROM announce WHERE item_id = ' . "'" . $item['id'] . "'";
+			$res2 = mysql_query($sql);
+			while ($item = mysql_fetch_assoc($res2)) {
+				echo htmlspecialchars($announce['text']) . "\n";
+				if ($item['is_new']) {
+					$mainItem = $item;
+				}
+			}
+			echo 'Main news item: ' . htmlspecialchars($mainItem['id']) . "\n";
+		}
+	}
+	echo date('Y-m-d H:i:s', $insertTs);
+}
+
+
+}
+```
+
+## 5) Расскажите, какой результат выведет следующий код и почему:
+
+Ответ: 150;
+Дело в приоритете исполнения методов(переопределенного, из трейта, и метода предка):
+Наивысший приоритет имеет метод переопределенный, далее из трейта, метод предка -
+следовательно 
+Calculator1::calculate вернет 5,
+Calculator2::calculate вернет 10,
+Calculator3::calculate вернет 20
+
+```php
+abstract class BaseCalculator {
+    public function calculate($val1, $val2) { return ($val1 + $val2) * 2; }
+}
+
+trait CalculatorTrait {
+    public function calculate($val1, $val2) { return $val1 + $val2; }
+}
+
+class Calculator1 extends BaseCalculator {
+    use CalculatorTrait;
+
+    public function calculate($val1, $val2) { return ($val1 + $val2) / 2; }
+}
+
+class Calculator2 extends BaseCalculator {
+    use CalculatorTrait;
+}
+
+class Calculator3 extends BaseCalculator { }
+
+
+$val1 = 3;
+$val2 = 7;
+
+$calc1 = new Calculator1();
+$calc2 = new Calculator2();
+$calc3 = new Calculator3();
+
+echo $calc1->calculate($val1, $val2) * ($calc2->calculate($val1, $val2) + $calc3->calculate($val1, $val2));
+```
+
+## 6) Файл /tmp/large_file.txt содержит около 5 000 000 строк, в каждой строке - не более 7 символов. Нижеприведенный код использует более 40 Мб оперативной памяти для чтения, обработки и вывода данных из файла в буфер. Измените функцию readMyFile таким образом, чтобы потребление памяти сократилось в 2 и более раз (можно использовать версию PHP 5.5 и выше):
+
+```
+Memory usage is: 28
+Memory usage is: 0
+Speed = INF
+```
+```php
+function readTheFile(&$memoryUsage) {
+    $begin = memory_get_usage(true);
+    $handle = fopen('large_file.txt', "r");
+    while ($line = fread($handle, 7)) {
+    	yield $line;
+    }
+    fclose($handle);
+	$end = memory_get_usage(true);
+    $memoryUsage = $end - $begin;
+}
+
+function readMyFile(&$memoryUsage)
+{
+    $begin = memory_get_usage(true);
+    $filePath = 'large_file.txt';
+    $result = [];
+    foreach (file($filePath) as $x => $line) {
+        $result[] = 'Line ' . $x . ': ' . $line;
+    }
+    $end = memory_get_usage(true);
+    $memoryUsage = $end - $begin;
+    return $result;
+}
+
+$memoryUsage = 0;
+$memoryUsage2 = 0;
+
+readMyFile($memoryUsage);
+foreach (readTheFile($memoryUsage2) as $item) {
+
+};
+
+$memoryUsage = $memoryUsage / 1024 / 1024;
+$memoryUsage2 = $memoryUsage2 / 1024 / 1024;
+
+
+echo "Memory usage is: $memoryUsage<br>";
+echo "Memory usage is: $memoryUsage2<br>";
+
+echo "Mem1/Mem2 = " . $memoryUsage / $memoryUsage2 . "<br>";
+```
