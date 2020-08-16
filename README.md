@@ -332,7 +332,7 @@ SEMINAR_PARTICIPATOR (Каждое поле внешний ключ на id из
 id_seminar int not null primary key 
 id_participator int not null primary key
 -----------------------------------------
-
+```
 
 ## 3) Предложить структуру для хранения древовидных комментариев.
 COMMENT
