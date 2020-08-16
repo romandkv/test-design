@@ -268,3 +268,77 @@ echo "Memory usage is: $memoryUsage2<br>";
 
 echo "Mem1/Mem2 = " . $memoryUsage / $memoryUsage2 . "<br>";
 ```
+
+# MYSQL
+## 1) Существует таблица, в которой хранятся записи о неких событиях (например, выставки или фестивали). Необходимо написать код, который выводил бы на экран события, которые проходят на этой неделе.
+### Данные в таблице описаны следующими полями:
+```
+id int not null primary key
+name text
+begin_date datetime // дата начала события
+end_date datetime // дата окончания события
+```
+
+```php
+
+try {
+	$dbh = new PDO(
+		'mysql:dbname=db_name;host=localhost', 
+		'логин', 
+		'пароль'
+	);
+	$stmt = $dbh->query(
+		'SELECT name, begin_date, end_date
+		FROM events 
+		WHERE WEEK(begin_date) = WEEK(CURDATE())'
+	);
+	while ($row = $stmt->fetch()) {
+		echo 
+			htmlspecialchars($row['name']) .
+			htmlspecialchars($row['begin_date']) .
+			htmlspecialchars($row['end_date']) .
+			"\n";
+	}
+
+} catch (PDOException $e) {
+	die($e->getMessage());
+}
+```
+
+## 2)  Каждый семинар характеризуется следующими атрибутами: название, дата начала, дата окончания, город, участники события. Необходимо спроектировать структуру таблиц БД для хранения записей о таких семинарах.
+
+В самом общем случае в одном семинаре может принимать участие множество людей, и один человек может принимать участие в нескольких семинарах.
+Отношение многие ко многим, потребуется 3 таблицы
+1) 
+```
+SEMINAR
+------------------------------
+id int not null primary key
+name varchar   
+city varchar
+begin_date datetime
+end_date datetime
+------------------------------
+
+
+PARTICIPATOR
+------------------------------
+id int not null primary key
+....
+------------------------------
+
+SEMINAR_PARTICIPATOR (Каждое поле внешний ключ на id из соотвествующей таблицы)
+-----------------------------------------
+id_seminar int not null primary key 
+id_participator int not null primary key
+-----------------------------------------
+
+
+## 3) Предложить структуру для хранения древовидных комментариев.
+COMMENT
+----------------------
+id int not null primary key
+text varchar
+id_user // внешний ключ на id user'a
+id_previous_level // внешний ключ на id комментария из таблицы COMMENT (NULL если комментарий не имеет предыдущего уровня)
+------------------------
